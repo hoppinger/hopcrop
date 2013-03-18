@@ -1,0 +1,6 @@
+name = HopCrop
+description = Sane cropping module for Drupal
+
+core = 7.x
+
+dependencies[] = libraries

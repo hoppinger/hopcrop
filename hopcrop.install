@@ -1,0 +1,33 @@
+<?php
+
+function hopcrop_schema() {
+  $schema = array();
+
+  $schema['hopcrop_coords'] = array(
+    'fields' => array(
+      'fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'unsigned' => TRUE,
+        'default' => 0,
+      ),
+      'style_name' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+    ),
+    'primary key' => array('fid', 'style_name'),
+  );
+
+  foreach (array('nw_x', 'nw_y', 'ze_x', 'ze_y') as $key) {
+    $schema['hopcrop_coords']['fields'][$key] = array(
+      'type' => 'int',
+      'not null' => TRUE,
+      'unsigned' => TRUE,
+      'default' => 0,
+    );
+  }
+
+  return $schema;
+}
