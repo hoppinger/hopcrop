@@ -439,7 +439,7 @@ function hopcrop_element_info_alter(&$type) {
 function hopcrop_file_managed_process($element, &$form_state, $form) {
   // If the user does not have access to HopCrop, jump out.
   if (!user_access('hopcrop')) {
-    return;
+    return $element;
   }
 
   // We do not try to run on non-field items, (yet).
