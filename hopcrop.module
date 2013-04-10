@@ -279,7 +279,7 @@ function hopcrop_hopcrop_process($element) {
     }
 
     foreach ($styles[$style_name]['effects'] as $effect) {
-      if ($effect['name'] = 'hopcrop') {
+      if ($effect['name'] == 'hopcrop') {
         $style_info = array(
           'name' => $style_name,
           'width' => $effect['data']['width'],
