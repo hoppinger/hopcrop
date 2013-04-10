@@ -246,6 +246,8 @@ function hopcrop_theme() {
  * sub elements.
  */
 function hopcrop_hopcrop_process($element) {
+  $element['#tree'] = TRUE;
+  
   // Extract the value from the element.
   $value = (isset($element['#value']) && is_array($element['#value'])) ? $element['#value'] : array();
 

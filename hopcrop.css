@@ -1,34 +1,36 @@
 
-.form-item .form-item.hopcrop-processed,
-.form-item .form-item.hopcrop-processed .form-item {
-  padding: 0;
-}
 
-.form-item .image-widget-data {
+
+.image-widget div.image-widget-data {
   float: none;
 }
 
-.form-item .form-item.hopcrop-processed {
+.form-item.hopcrop-processed, .form-item .form-item.hopcrop-processed {
   border: 1px solid #ccc;
   background: #f2f2f2;
   margin-bottom: 10px;
+  padding: 0;
 }
 
-.hopcrop-image {
+.form-item.hopcrop-processed .form-item {
+  padding: 0;
+}
+
+.form-item.hopcrop-processed .hopcrop-image {
   padding: 10px;
 }
 
-.hopcrop-navigation {
+.form-item.hopcrop-processed .hopcrop-navigation {
   width: 299px;
   float: right;
   border-left: 1px solid #ccc;
 }
 
-.hopcrop-navigation ul {
+.form-item.hopcrop-processed .hopcrop-navigation ul {
   margin: 0;
 }
 
-.hopcrop-navigation ul li {
+.form-item.hopcrop-processed .hopcrop-navigation ul li {
   list-style: none;
   list-style-type: none;
 
@@ -37,20 +39,20 @@
   padding: 10px;
 }
 
-.hopcrop-navigation ul li a {
+.form-item.hopcrop-processed .hopcrop-navigation ul li a {
   font-weight: bold;
 }
 
-.hopcrop-navigation ul li.active {
+.form-item.hopcrop-processed .hopcrop-navigation ul li.active {
   background: white;
 }
 
-.hopcrop-navigation ul li.filled {
+.form-item.hopcrop-processed .hopcrop-navigation ul li.filled {
   padding-left: 5px;
   border-left: 5px solid #2c2;
 }
 
-.hopcrop-navigation ul li .hopcrop-warning {
+.form-item.hopcrop-processed .hopcrop-navigation ul li .hopcrop-warning {
   color: #e00;
   margin: 0;
   font-size: 0.8em;
