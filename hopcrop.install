@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @file
+ * Install logic for HopCrop module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
 function hopcrop_schema() {
   $schema = array();
 

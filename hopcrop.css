@@ -1,13 +1,11 @@
-
-
-
 .image-widget div.image-widget-data {
   float: none;
 }
 
-.form-item.hopcrop-processed, .form-item .form-item.hopcrop-processed {
-  border: 1px solid #ccc;
+.form-item.hopcrop-processed,
+.form-item .form-item.hopcrop-processed {
   background: #f2f2f2;
+  border: 1px solid #ccc;
   margin-bottom: 10px;
   padding: 0;
 }
@@ -21,9 +19,9 @@
 }
 
 .form-item.hopcrop-processed .hopcrop-navigation {
-  width: 299px;
-  float: right;
   border-left: 1px solid #ccc;
+  float: right;
+  width: 299px;
 }
 
 .form-item.hopcrop-processed .hopcrop-navigation ul {
@@ -31,11 +29,10 @@
 }
 
 .form-item.hopcrop-processed .hopcrop-navigation ul li {
+  border-bottom: 1px solid #ccc;
+  display: block;
   list-style: none;
   list-style-type: none;
-
-  display: block;
-  border-bottom: 1px solid #ccc;
   padding: 10px;
 }
 
@@ -48,13 +45,13 @@
 }
 
 .form-item.hopcrop-processed .hopcrop-navigation ul li.filled {
-  padding-left: 5px;
   border-left: 5px solid #2c2;
+  padding-left: 5px;
 }
 
 .form-item.hopcrop-processed .hopcrop-navigation ul li .hopcrop-warning {
   color: #e00;
-  margin: 0;
   font-size: 0.8em;
   font-weight: bold;
+  margin: 0;
 }

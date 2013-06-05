@@ -4,14 +4,14 @@ var HopCrop = function(context, settings) {
       // Get the img tag where the Jcrop should be assigned to.
   var image = $('.hopcrop-image > img', context),
 
-      // Make sure we have the elements in place to assign the navigation 
+      // Make sure we have the elements in place to assign the navigation
       // elements to.
       nav = (function(c) {
         var container = $("<div />").addClass('hopcrop-navigation').insertBefore($('.hopcrop-image', c));
         setTimeout(function() {
           container.height($('.hopcrop-image', c).outerHeight());
         }, 100);
-        
+
         return $("<ul />").appendTo(container);
       })(context),
 
@@ -21,7 +21,7 @@ var HopCrop = function(context, settings) {
       // Setup our public interface. This will be passed into Style and used as
       // a return value;
       r = {
-        nav: nav, 
+        nav: nav,
         image: image,
         deactivate: function() {
           $.each(styles, function(n, s) { s.deactivate(); });
@@ -52,15 +52,15 @@ var HopCrop = function(context, settings) {
 var Style = function(c, style_name, style_item, settings) {
       // Figure out the label of the text field and remove the element.
   var label = $('label', style_item).remove().text(),
-      
+
       // Get the input and make it hidden.
       input = $('input[type=text]', style_item).detach().attr('type', 'hidden').appendTo(style_item),
-      
+
       // Create a navigation item.
       nav_item = $("<li />").appendTo(c.nav).append($("<a />").attr('href', '#').text(label)),
-      
+
       active = false,
-      jcrop, 
+      jcrop,
 
       // Set the coordinates.
       set = function(c) {
@@ -69,7 +69,7 @@ var Style = function(c, style_name, style_item, settings) {
           input.val("");
           nav_item.removeClass('filled');
           return;
-        } 
+        }
 
         input.val("" + Math.floor(c.x / settings.display_factor) + ", " + Math.floor(c.y / settings.display_factor) + ", " + Math.floor(c.x2 / settings.display_factor) + ", " + Math.floor(c.y2 / settings.display_factor));
         if (!nav_item.hasClass('filled')) { nav_item.addClass('filled'); }
@@ -92,7 +92,7 @@ var Style = function(c, style_name, style_item, settings) {
           jcrop.setSelect($.map(input.val().split(","), function(v) {
             return Math.floor(parseInt($.trim(v), 10) * settings.display_factor);
           }));
-        } 
+        }
 
         // Mark as activated.
         nav_item.addClass('active');

@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * @file
+ * Provides a sane cropping module for Drupal.
+ */
+
+/**
  * Implements hook_file_load().
  *
  * Fetches the coordinates from the database for loaded files.
@@ -55,7 +60,8 @@ function hopcrop_file_update($file) {
   hopcrop_file_delete($file);
   if (!empty($file->hopcrop)) {
     // Insert the new coords in the database.
-    $query = db_insert('hopcrop_coords')->fields(array('fid', 'style_name', 'nw_x', 'nw_y', 'ze_x', 'ze_y'));
+    $query = db_insert('hopcrop_coords')
+      ->fields(array('fid', 'style_name', 'nw_x', 'nw_y', 'ze_x', 'ze_y'));
     foreach ($file->hopcrop as $style_name => $row) {
       $record = array(
         'fid' => $file->fid,
@@ -68,8 +74,8 @@ function hopcrop_file_update($file) {
     }
     $query->execute();
   }
-  
-  // Remove the generated derivatives, to make sure the new coords have any 
+
+  // Remove the generated derivatives, to make sure the new coords have any
   // effect.
   image_path_flush($file->uri);
 }
@@ -124,12 +130,12 @@ function hopcrop_image_default_styles() {
     array(
       'name' => 'image_scale',
       'data' => array(
-        'width' => 512, 
-        'height' => 384, 
+        'width' => 512,
+        'height' => 384,
         'upscale' => 0,
       ),
       'weight' => 0,
-    )
+    ),
   );
   return $styles;
 }
@@ -147,7 +153,7 @@ function hopcrop_image_effect_info() {
     // Most parts are usuable from the existing image effects.
     'dimensions callback' => 'image_resize_dimensions',
     'form callback' => 'image_resize_form',
-    'summary theme' => 'image_resize_summary'
+    'summary theme' => 'image_resize_summary',
   );
 
   return $effects;
@@ -157,24 +163,47 @@ function hopcrop_image_effect_info() {
  * Image effect callback.
  */
 function hopcrop_crop_effect(&$image, $data) {
-  // Try to find the style name in the URL
+  // Try to find the style name in the URL.
   if ($style_name = hopcrop_extract_style_name_from_path()) {
     // Try to fetch the coordinates for the style.
     $coords = hopcrop_coords_style_uri($style_name, $image->source);
-  } else {
+  }
+  else {
     $coords = FALSE;
   }
 
   if ($coords) {
     // Use our crop function when we have coords.
     if (!hopcrop_crop($image, $data['width'], $data['height'], $coords['nw_x'], $coords['nw_y'], $coords['ze_x'], $coords['ze_y'])) {
-      watchdog('image', 'HopCrop failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', array('%toolkit' => $image->toolkit, '%path' => $image->source, '%mimetype' => $image->info['mime_type'], '%dimensions' => $image->info['width'] . 'x' . $image->info['height']), WATCHDOG_ERROR);
+      watchdog(
+        'image',
+        'HopCrop failed using the %toolkit toolkit on %path (%mimetype, %dimensions)',
+        array(
+          '%toolkit' => $image->toolkit,
+          '%path' => $image->source,
+          '%mimetype' => $image->info['mime_type'],
+          '%dimensions' =>
+          $image->info['width'] . 'x' . $image->info['height'],
+        ),
+        WATCHDOG_ERROR
+      );
       return FALSE;
     }
-  } else {
+  }
+  else {
     // Just use the existing scale & crop as a fallback.
     if (!image_scale_and_crop($image, $data['width'], $data['height'])) {
-      watchdog('image', 'Image scale and crop failed using the %toolkit toolkit on %path (%mimetype, %dimensions)', array('%toolkit' => $image->toolkit, '%path' => $image->source, '%mimetype' => $image->info['mime_type'], '%dimensions' => $image->info['width'] . 'x' . $image->info['height']), WATCHDOG_ERROR);
+      watchdog(
+        'image',
+        'Image scale and crop failed using the %toolkit toolkit on %path (%mimetype, %dimensions)',
+        array(
+          '%toolkit' => $image->toolkit,
+          '%path' => $image->source,
+          '%mimetype' => $image->info['mime_type'],
+          '%dimensions' => $image->info['width'] . 'x' . $image->info['height'],
+        ),
+        WATCHDOG_ERROR
+      );
       return FALSE;
     }
   }
@@ -187,7 +216,7 @@ function hopcrop_crop_effect(&$image, $data) {
  */
 function hopcrop_crop(stdClass $image, $width, $height, $nw_x, $nw_y, $ze_x, $ze_y) {
   // First, execute the crop.
-  if (image_crop($image, $nw_x, $nw_y, $ze_x-$nw_x, $ze_y-$nw_y)) {
+  if (image_crop($image, $nw_x, $nw_y, $ze_x - $nw_x, $ze_y - $nw_y)) {
     // Then, run through scale & crop to ensure the requested dimensions.
     return image_scale_and_crop($image, $width, $height);
   }
@@ -202,7 +231,8 @@ function hopcrop_element_info() {
   $info = array();
 
   $info['hopcrop'] = array(
-    '#input' => TRUE, // This element has a value.
+    // This element has a value.
+    '#input' => TRUE,
 
     // Form API callbacks that perform the real magic.
     '#process' => array('hopcrop_hopcrop_process'),
@@ -222,10 +252,10 @@ function hopcrop_element_info() {
       ),
       'css' => array(
         drupal_get_path('module', 'hopcrop') . '/hopcrop.css',
-      )
+      ),
     ),
 
-    # Default values for the optional parameters.
+    // Default values for the optional parameters.
     '#display_style_name' => 'hopcrop_admin',
   );
 
@@ -242,12 +272,13 @@ function hopcrop_theme() {
 }
 
 /**
- * Form API Process callback. Extends the 'hopcrop' element with the required
- * sub elements.
+ * Form API Process callback.
+ *
+ * Extends the 'hopcrop' element with the required sub elements.
  */
 function hopcrop_hopcrop_process($element) {
   $element['#tree'] = TRUE;
-  
+
   // Extract the value from the element.
   $value = (isset($element['#value']) && is_array($element['#value'])) ? $element['#value'] : array();
 
@@ -294,7 +325,8 @@ function hopcrop_hopcrop_process($element) {
           $factor = min(floatval($info['width']) / floatval($effect['data']['width']), floatval($info['height']) / floatval($effect['data']['height']));
           $style_info['min_width'] = floatval($effect['data']['width']) * $factor;
           $style_info['min_height'] = floatval($effect['data']['height']) * $factor;
-        } else {
+        }
+        else {
           $style_info['min_width'] = $effect['data']['width'];
           $style_info['min_height'] = $effect['data']['height'];
         }
@@ -323,10 +355,14 @@ function hopcrop_hopcrop_process($element) {
   // Attach the image style information to the Javascript settings object, so we
   // can access it from the Javascript.
   $element['#attached']['js'][] = array(
-    'data' => array('HopCrop' => array($element['#id'] => array(
-      'styles' => $styles_data,
-      'display_factor' => $display_factor,
-    ))),
+    'data' => array(
+      'HopCrop' => array(
+        $element['#id'] => array(
+          'styles' => $styles_data,
+          'display_factor' => $display_factor,
+        ),
+      ),
+    ),
     'type' => 'setting',
   );
 
@@ -334,8 +370,9 @@ function hopcrop_hopcrop_process($element) {
 }
 
 /**
- * Form API value callback. Converts the strings in the textfields back to 
- * coord arrays.
+ * Form API value callback.
+ *
+ * Converts the strings in the textfields back to coord arrays.
  */
 function hopcrop_hopcrop_value_callback($element, $input, &$form_state) {
   // If $input is FALSE, we should set the default value.
@@ -369,8 +406,9 @@ function hopcrop_hopcrop_value_callback($element, $input, &$form_state) {
 }
 
 /**
- * Form API element validate callback. Makes sure we do not have reversed
- * coordinates.
+ * Form API element validate callback.
+ *
+ * Makes sure we do not have reversed coordinates.
  */
 function hopcrop_hopcrop_value_validate($element, &$form_state, $form) {
   $value = $element['#value'];
@@ -389,7 +427,9 @@ function hopcrop_hopcrop_value_validate($element, &$form_state, $form) {
 }
 
 /**
- * Theme callback for the 'hopcrop' element. Mostly copied from theme_form_item.
+ * Theme callback for the 'hopcrop' element.
+ *
+ * Mostly copied from theme_form_item.
  */
 function theme_hopcrop($variables) {
   $element = &$variables['element'];
@@ -398,14 +438,21 @@ function theme_hopcrop($variables) {
   if (!empty($element['#id'])) {
     $attributes['id'] = $element['#id'];
   }
+
   // Add element's #type and #name as class to aid with JS/CSS selectors.
   $attributes['class'] = array('form-item');
   if (!empty($element['#type'])) {
     $attributes['class'][] = 'form-type-' . strtr($element['#type'], '_', '-');
   }
   if (!empty($element['#name'])) {
-    $attributes['class'][] = 'form-item-' . strtr($element['#name'], array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
+    $attributes['class'][] = 'form-item-' . strtr($element['#name'], array(
+      ' ' => '-',
+      '_' => '-',
+      '[' => '-',
+      ']' => '',
+    ));
   }
+
   // Add a class for disabled elements to facilitate cross-browser styling.
   if (!empty($element['#attributes']['disabled'])) {
     $attributes['class'][] = 'form-disabled';
@@ -473,9 +520,10 @@ function hopcrop_file_managed_process($element, &$form_state, $form) {
 }
 
 /**
- * Implements hook_field_widget_WIDGET_TYPE_form_alter(). It registers the
- * hopcrop_image_field_widget_process callback, to make sure the default preview
- * image is hidden.
+ * Implements hook_field_widget_WIDGET_TYPE_form_alter().
+ *
+ * It registers the hopcrop_image_field_widget_process callback, to make sure
+ * the default preview image is hidden.
  */
 function hopcrop_field_widget_image_image_form_alter(&$element, &$form_state, $context) {
   // If the user does not have access to HopCrop, jump out.
@@ -486,7 +534,7 @@ function hopcrop_field_widget_image_image_form_alter(&$element, &$form_state, $c
   foreach (element_children($element) as $delta) {
     if (!is_numeric($delta)) {
       continue;
-    } 
+    }
 
     $styles = hopcrop_styles_instance($element[$delta]['#entity_type'], $element[$delta]['#field_name'], $element[$delta]['#bundle']);
     if (!$styles) {
@@ -522,8 +570,9 @@ function hopcrop_styles_instance($entity_type, $field_name, $bundle) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter(). Registers the interface to choose the
- * enabled styles for a field instance.
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Registers the interface to choose the enabled styles for a field instance.
  */
 function hopcrop_form_field_ui_field_edit_form_alter(&$form, $form_state) {
   $field = $form['#field'];
@@ -548,21 +597,22 @@ function hopcrop_form_field_ui_field_edit_form_alter(&$form, $form_state) {
     '#title' => t("HopCrop settings"),
     '#collapsed' => FALSE,
     '#collapsible' => TRUE,
-    '#tree' => TRUE
+    '#tree' => TRUE,
   );
-  
+
   $form['instance']['settings']['hopcrop']['styles'] = array(
     '#type' => 'checkboxes',
     '#title' => t("Available HopCrop styles"),
     '#description' => t("Select which styles should be available for this field."),
     '#options' => $options,
-    '#default_value' => isset($settings['hopcrop']['styles']) ? $settings['hopcrop']['styles'] : array()
+    '#default_value' => isset($settings['hopcrop']['styles']) ? $settings['hopcrop']['styles'] : array(),
   );
 }
 
 /**
- * Implements hook_field_attach_presave(). Saves the coordinates to the files
- * when submitting an entity.
+ * Implements hook_field_attach_presave().
+ *
+ * Saves the coordinates to the files when submitting an entity.
  */
 function hopcrop_field_attach_presave($entity_type, $entity) {
   // Find the field instances on the entity.
@@ -637,10 +687,10 @@ function hopcrop_coords_style_uri($style_name, $uri) {
 /**
  * Extract the style name from the path.
  */
-function hopcrop_extract_style_name_from_path($path = null) {
-  $pointer = array_search('styles', arg(null, $path));
+function hopcrop_extract_style_name_from_path($path = NULL) {
+  $pointer = array_search('styles', arg(NULL, $path));
   if ($pointer === FALSE) {
     return FALSE;
   }
-  return arg($pointer+1, $path);
+  return arg($pointer + 1, $path);
 }
