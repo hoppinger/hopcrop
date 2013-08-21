@@ -1,6 +1,9 @@
 .image-widget div.image-widget-data {
   float: none;
 }
+tr.draggable .image-widget div.image-widget-data {
+  margin-left: 20px;
+}
 
 .form-item.hopcrop-processed,
 .form-item .form-item.hopcrop-processed {
