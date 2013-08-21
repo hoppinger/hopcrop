@@ -315,6 +315,7 @@ function hopcrop_hopcrop_process($element) {
       if ($effect['name'] == 'hopcrop') {
         $style_info = array(
           'name' => $style_name,
+          'label' => !empty($styles[$style_name]['label']) ? $styles[$style_name]['label'] : $style_name,
           'width' => $effect['data']['width'],
           'height' => $effect['data']['height'],
         );
@@ -347,7 +348,7 @@ function hopcrop_hopcrop_process($element) {
 
     $element[$style_info['name']] = array(
       '#type' => 'textfield',
-      '#title' => $style_info['name'],
+      '#title' => $style_info['label'],
       '#default_value' => implode(', ', $v),
     );
   }
