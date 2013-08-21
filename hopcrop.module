@@ -385,9 +385,26 @@ function hopcrop_hopcrop_value_callback($element, $input, &$form_state) {
     return array();
   }
 
+  $value = hopcrop_hopcrop_parse_value($input);
+
+  // Register the value in the form state.
+  drupal_array_set_nested_value($form_state['values'], $element['#parents'], $value, TRUE);
+
+  return $value;
+}
+
+/**
+ * Parse input data to structured array
+ */
+function hopcrop_hopcrop_parse_value($input) {
   // Construct the value array.
   $value = array();
   foreach ($input as $style_name => $data) {
+    if (is_array($data)) {
+      $value[$style_name] = $data;
+      continue;
+    }
+
     if (!is_string($data) || !trim($data)) {
       continue;
     }
@@ -398,9 +415,6 @@ function hopcrop_hopcrop_value_callback($element, $input, &$form_state) {
       $value[$style_name][$key] = !empty($data[$i]) ? $data[$i] : 0;
     }
   }
-
-  // Register the value in the form state.
-  drupal_array_set_nested_value($form_state['values'], $element['#parents'], $value, TRUE);
 
   return $value;
 }
@@ -507,13 +521,18 @@ function hopcrop_file_managed_process($element, &$form_state, $form) {
     return $element;
   }
 
+  $default_value = $element['#file']->hopcrop;
+  if (!empty($element['#default_value']['hopcrop'])) {
+    $default_value = hopcrop_hopcrop_parse_value($element['#default_value']['hopcrop']);
+  }
+
   // Add HopCrop.
   $element['hopcrop'] = array(
     '#type' => 'hopcrop',
     '#weight' => -100,
     '#image_path' => $element['#file']->uri,
     '#style_names' => $styles,
-    '#default_value' => $element['#file']->hopcrop,
+    '#default_value' => $default_value,
   );
 
   return $element;
