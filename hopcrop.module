@@ -511,14 +511,26 @@ function hopcrop_file_managed_process($element, &$form_state, $form) {
     return $element;
   }
 
-  // If no file is available yet, do not show HopCrop.
-  if (!$element['#file']) {
-    return $element;
-  }
-
   // Fetch the styles that are enabled for this field instance.
   $styles = hopcrop_styles_instance($element['#entity_type'], $element['#field_name'], $element['#bundle']);
   if (!$styles) {
+    return $element;
+  }
+
+  // Work-around for IE8. In most cases this prevents errors with lazy-loading
+  // CSS. We'll need to keep this, until https://drupal.org/node/1071818 is
+  // fixed.
+  // The only case in which this does not work, is if no HopCrop-enabled image
+  // field is visible in the form at first load.
+  $element['#attached'] = array(
+    'css' => array(
+      drupal_get_path('module', 'hopcrop') . '/hopcrop.css',
+      libraries_get_path('Jcrop') . '/css/jquery.Jcrop.css',
+    ),
+  );
+
+  // If no file is available yet, do not show HopCrop.
+  if (!$element['#file']) {
     return $element;
   }
 
