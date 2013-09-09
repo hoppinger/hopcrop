@@ -538,14 +538,16 @@ function hopcrop_file_managed_process($element, &$form_state, $form) {
     return $element;
   }
 
-  // We do not try to run on non-field items, (yet).
-  if (!isset($element['#field_name'])) {
-    return $element;
+  if (!isset($element['#hopcrop_style_names']) && isset($element['#field_name'])) {
+    // Fetch the styles that are enabled for this field instance.
+    $styles = hopcrop_styles_instance($element['#entity_type'], $element['#field_name'], $element['#bundle']);
+
+    if ($styles) {
+      $element['#hopcrop_style_names'] = $styles;
+    }
   }
 
-  // Fetch the styles that are enabled for this field instance.
-  $styles = hopcrop_styles_instance($element['#entity_type'], $element['#field_name'], $element['#bundle']);
-  if (!$styles) {
+  if (!isset($element['#hopcrop_style_names'])) {
     return $element;
   }
 
@@ -576,7 +578,7 @@ function hopcrop_file_managed_process($element, &$form_state, $form) {
     '#type' => 'hopcrop',
     '#weight' => -100,
     '#image_path' => $element['#file']->uri,
-    '#style_names' => $styles,
+    '#style_names' => $element['#hopcrop_style_names'],
     '#default_value' => $default_value,
   );
 
