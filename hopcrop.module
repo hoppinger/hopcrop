@@ -150,9 +150,9 @@ function hopcrop_image_effect_info() {
     'label' => t("HopCrop"),
     'help' => t(""),
     'effect callback' => 'hopcrop_crop_effect',
+    'form callback' => 'hopcrop_crop_form',
     // Most parts are usuable from the existing image effects.
     'dimensions callback' => 'image_resize_dimensions',
-    'form callback' => 'image_resize_form',
     'summary theme' => 'image_resize_summary',
   );
 
@@ -160,11 +160,43 @@ function hopcrop_image_effect_info() {
 }
 
 /**
+ * Image effect form callback.
+ */
+function hopcrop_crop_form($data) {
+  $form = image_resize_form($data);
+
+  $styles = hopcrop_styles();
+  $options = array();
+  foreach ($styles as $style_name => $style) {
+    $options[$style_name] = $style['name'];
+  }
+
+  if (!empty($options)) {
+    $form['coords_from_style_name'] = array(
+      '#type' => 'select',
+      '#title' => t('Use coords from'),
+      '#options' => $options,
+      '#default_value' => !empty($data['coords_from_style_name']) ? $data['coords_from_style_name'] : '',
+      '#empty_value' => '',
+      '#empty_option' => t('This style'),
+    );
+  } else {
+    $form['coords_from_style_name'] = array(
+      '#type' => 'value',
+      '#value' => '',
+    );
+  }
+  
+  return $form;
+}
+
+/**
  * Image effect callback.
  */
 function hopcrop_crop_effect(&$image, $data) {
+  $style_name = !empty($data['coords_from_style_name']) ? $data['coords_from_style_name'] : FALSE;
   // Try to find the style name in the URL.
-  if ($style_name = hopcrop_extract_style_name_from_path()) {
+  if (!empty($style_name) || ($style_name = hopcrop_extract_style_name_from_path())) {
     // Try to fetch the coordinates for the style.
     $coords = hopcrop_coords_style_uri($style_name, $image->source);
   }
@@ -689,7 +721,7 @@ function hopcrop_styles() {
   $styles = image_styles();
   foreach ($styles as $style_name => $style) {
     foreach ($style['effects'] as $sid => $effect) {
-      if ($effect['module'] == 'hopcrop') {
+      if ($effect['module'] == 'hopcrop' && empty($effect['data']['coords_from_style_name'])) {
         $return[$style_name] = $style;
         break;
       }
