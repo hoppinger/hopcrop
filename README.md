@@ -26,8 +26,8 @@ you can simply add the following code to your `.make` file.
     projects[hopcrop][subdir] = "contrib"
 
     libraries[Jcrop][download][type] = "file"
-    libraries[Jcrop][download][url] = "http://jcrop.googlecode.com/files/jquery.Jcrop-0.9.8.zip"
-    libraries[Jcrop][download][md5] = "68ffe2444e4466a88f095ec63e5582f9"
+    libraries[Jcrop][download][url] = "https://github.com/tapmodo/Jcrop/archive/v0.9.12.tar.gz"
+    libraries[Jcrop][download][md5] = "13fe16609c809bd9f8190308b5f088f9"
 
 ## Configuration
 
