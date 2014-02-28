@@ -67,6 +67,15 @@ function hopcrop_file_update($file) {
         'fid' => $file->fid,
         'style_name' => $style_name,
       );
+      
+      if (is_string($row)) {
+        $data = array_map('intval', array_map('trim', explode(',', $row)));
+        $row = array();
+        foreach (array('nw_x', 'nw_y', 'ze_x', 'ze_y') as $i => $key) {
+          $row[$key] = !empty($data[$i]) ? $data[$i] : 0;
+        }
+      }
+      
       foreach (array('nw_x', 'nw_y', 'ze_x', 'ze_y') as $key) {
         $record[$key] = $row[$key];
       }
