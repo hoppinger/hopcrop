@@ -632,6 +632,26 @@ function hopcrop_image_field_widget_process($elements) {
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Adds HopCrop editor to image edit screen.
+ */
+function hopcrop_form_file_entity_edit_alter(&$form, &$form_state) {
+  if ($form_state['file']->type == 'image') {
+    unset($form['preview']);
+
+    $styles = array_keys(hopcrop_styles());
+    $form['hopcrop'] = array(
+      '#type' => 'hopcrop',
+      '#weight' => -5,
+      '#image_path' => $form_state['file']->uri,
+      '#style_names' => $styles,
+      '#default_value' => $form_state['file']->hopcrop,
+    );
+  }
+}
+
+/**
  * Fetch the image styles that are enabled for a field instance.
  */
 function hopcrop_styles_instance($entity_type, $field_name, $bundle) {
