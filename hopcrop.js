@@ -1,6 +1,6 @@
 (function ($) {
 
-var Style = function(c, style_name, style_item, settings) {
+var Style = function(cropper, style_name, style_item, settings) {
       // Figure out the label of the text field and remove the element.
   var label = $('label', style_item).remove().text(),
 
@@ -8,21 +8,51 @@ var Style = function(c, style_name, style_item, settings) {
       input = $('input[type=text]', style_item).hide(),
 
       // Create a navigation item.
-      nav_item = $("<li />").appendTo(c.nav).append($("<a />").attr('href', '#').text(label)),
+      nav_item = $("<li />").appendTo(cropper.nav).append($("<a />").attr('href', '#').text(label)),
 
       active = false,
       jcrop,
 
+      parseCoords = function(val) {
+        if (!val) {
+          return {x: 0, y: 0, x2: 0, y2: 0};
+        }
+
+        var v = $.map(input.val().split(","), function(v) {
+          return Math.floor(parseInt($.trim(v), 10) * settings.display_factor);
+        });
+
+        return {x: v[0], y: v[1], x2: v[2], y2: v[3]};
+      },
+
+      coordsEmpty = function(c) {
+        return c.x === c.x2 && c.y === c.y2
+      },
+
+      serializeCoords = function(c) {
+        // If the crop spans 0px area, it's considered empty.
+        if (coordsEmpty(c)) {
+          return "";
+        }
+
+        return "" + Math.floor(c.x / settings.display_factor) + ", " + Math.floor(c.y / settings.display_factor) + ", " + Math.floor(c.x2 / settings.display_factor) + ", " + Math.floor(c.y2 / settings.display_factor);
+      },
+
+      flattenCoords = function(c) {
+        return [c.x, c.y, c.x2, c.y2];
+      },
+
       // Set the coordinates.
       set = function(c) {
-        // If the crop spans 0px area, it's considered empty.
-        if (c.x === c.x2 && c.y === c.y2) {
-          input.val("");
+        var val = serializeCoords(c);
+
+        if (!val) {
+          input.val(val);
           nav_item.removeClass('filled');
           return;
         }
 
-        input.val("" + Math.floor(c.x / settings.display_factor) + ", " + Math.floor(c.y / settings.display_factor) + ", " + Math.floor(c.x2 / settings.display_factor) + ", " + Math.floor(c.y2 / settings.display_factor));
+        input.val(val);
         if (!nav_item.hasClass('filled')) { nav_item.addClass('filled'); }
       },
 
@@ -31,19 +61,18 @@ var Style = function(c, style_name, style_item, settings) {
         if (active) { return; }
 
         // Setup Jcrop.
-        jcrop = $.Jcrop(c.image, {
+        jcrop = $.Jcrop(cropper.image, {
           onChange: set,
           onSelect: set,
           aspectRatio: settings.width / settings.height,
           minSize: [Math.floor(settings.min_width * settings.display_factor), Math.floor(settings.min_height * settings.display_factor)]
         });
 
-        // Set the current value.
-        if (input.val()) {
-          jcrop.setSelect($.map(input.val().split(","), function(v) {
-            return Math.floor(parseInt($.trim(v), 10) * settings.display_factor);
-          }));
-        }
+        var c = parseCoords(input.val());
+
+        if (!coordsEmpty(c)) {
+          jcrop.setSelect(flattenCoords(c));
+        };
 
         // Mark as activated.
         nav_item.addClass('active');
@@ -63,7 +92,7 @@ var Style = function(c, style_name, style_item, settings) {
       };
 
   // Add the filled class if we are filled.
-  if (input.val()) { nav_item.addClass('filled'); }
+  if (!coordsEmpty(parseCoords(input.val()))) { nav_item.addClass('filled'); }
   if (settings.warning !== undefined) { $("<p />").addClass('hopcrop-warning').text(settings.warning).appendTo(nav_item); }
 
   // Click binding on the style switcher.
@@ -71,7 +100,7 @@ var Style = function(c, style_name, style_item, settings) {
     e.preventDefault();
     if (active) { return; }
 
-    c.deactivate();
+    cropper.deactivate();
     activate();
   });
 
