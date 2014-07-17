@@ -88,7 +88,7 @@ var HopCrop = function(context, settings) {
       nav = (function(c) {
         var container = $("<div />").addClass('hopcrop-navigation').insertBefore($('.hopcrop-image', c));
         setTimeout(function() {
-          container.height($('.hopcrop-image', c).outerHeight());
+          container.css('min-height', $('.hopcrop-image', c).outerHeight());
         }, 100);
 
         return $("<ul />").appendTo(container);

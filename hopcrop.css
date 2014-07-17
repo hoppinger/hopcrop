@@ -11,6 +11,18 @@ tr.draggable .image-widget div.image-widget-data {
   border: 1px solid #ccc;
   margin-bottom: 10px;
   padding: 0;
+  *zoom: 1;
+}
+
+.form-item.hopcrop-processed:before, .form-item.hopcrop-processed:after,
+.form-item .form-item.hopcrop-processed:before, .form-item .form-item.hopcrop-processed:after {
+  content: " ";
+  display: table;
+}
+
+.form-item.hopcrop-processed:after,
+.form-item .form-item.hopcrop-processed:after {
+  clear: both;
 }
 
 .form-item.hopcrop-processed .form-item {
