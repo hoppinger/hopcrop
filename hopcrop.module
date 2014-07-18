@@ -472,9 +472,16 @@ function hopcrop_hopcrop_process($element) {
 
       $style_info = array(
         'name' => $style_name,
-        'label' => !empty($styles[$style_name]['label']) ? $styles[$style_name]['label'] : $style_name,
+        'label' => $style_name,
         'protect_aspect_ratio' => FALSE,
       );
+
+      if (!empty($styles[$style_name]['label'])) {
+        $style_info['label'] = $styles[$style_name]['label'];
+      }
+      if (!empty($effect['data']['hopcrop_label'])) {
+        $style_info['label'] = $effect['data']['hopcrop_label'];
+      }
 
       switch ($effect['name']) {
         case 'hopcrop':
