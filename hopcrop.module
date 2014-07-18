@@ -240,6 +240,14 @@ function hopcrop_scale_form($data) {
   return $form;
 }
 
+function hopcrop_coords_area($coords) {
+  if (!$coords) {
+    return FALSE;
+  }
+
+  return abs($coords['ze_x'] - $coords['nw_x']) * abs($coords['ze_y'] - $coords['nw_y']);
+}
+
 /**
  * Image effect callback.
  */
@@ -254,7 +262,7 @@ function hopcrop_crop_effect(&$image, $data) {
     $coords = FALSE;
   }
 
-  if ($coords) {
+  if (hopcrop_coords_area($coords)) {
     // Use our crop function when we have coords.
     if (!hopcrop_crop($image, $data['width'], $data['height'], $coords['nw_x'], $coords['nw_y'], $coords['ze_x'], $coords['ze_y'])) {
       watchdog(
@@ -313,7 +321,7 @@ function hopcrop_scale_effect(&$image, $data) {
     'upscale' => FALSE,
   );
 
-  if ($coords) {
+  if (hopcrop_coords_area($coords)) {
     // Use our crop function when we have coords.
     if (!hopcrop_scale($image, $data['width'], $data['height'], $data['upscale'], $coords['nw_x'], $coords['nw_y'], $coords['ze_x'], $coords['ze_y'])) {
       watchdog(
