@@ -165,6 +165,16 @@ function hopcrop_image_effect_info() {
     'summary theme' => 'image_resize_summary',
   );
 
+  $effects['hopcrop_scale'] = array(
+    'label' => t("HopCrop Scale"),
+    'help' => t(""),
+    'effect callback' => 'hopcrop_scale_effect',
+    'form callback' => 'hopcrop_scale_form',
+    // Most parts are usuable from the existing image effects.
+    'dimensions callback' => 'image_scale_dimensions', // not really correct, but we can't use the cropping coordinates for dimension calculation
+    'summary theme' => 'image_scale_summary',
+  );
+
   return $effects;
 }
 
@@ -173,6 +183,37 @@ function hopcrop_image_effect_info() {
  */
 function hopcrop_crop_form($data) {
   $form = image_resize_form($data);
+
+  $styles = hopcrop_styles();
+  $options = array();
+  foreach ($styles as $style_name => $style) {
+    $options[$style_name] = $style['name'];
+  }
+
+  if (!empty($options)) {
+    $form['coords_from_style_name'] = array(
+      '#type' => 'select',
+      '#title' => t('Use coords from'),
+      '#options' => $options,
+      '#default_value' => !empty($data['coords_from_style_name']) ? $data['coords_from_style_name'] : '',
+      '#empty_value' => '',
+      '#empty_option' => t('This style'),
+    );
+  } else {
+    $form['coords_from_style_name'] = array(
+      '#type' => 'value',
+      '#value' => '',
+    );
+  }
+  
+  return $form;
+}
+
+/**
+ * Image effect form callback.
+ */
+function hopcrop_scale_form($data) {
+  $form = image_scale_form($data);
 
   $styles = hopcrop_styles();
   $options = array();
@@ -253,6 +294,65 @@ function hopcrop_crop_effect(&$image, $data) {
 }
 
 /**
+ * Image effect callback.
+ */
+function hopcrop_scale_effect(&$image, $data) {
+  $style_name = !empty($data['coords_from_style_name']) ? $data['coords_from_style_name'] : FALSE;
+  // Try to find the style name in the URL.
+  if (!empty($style_name) || ($style_name = hopcrop_extract_style_name_from_path())) {
+    // Try to fetch the coordinates for the style.
+    $coords = hopcrop_coords_style_uri($style_name, $image->source);
+  }
+  else {
+    $coords = FALSE;
+  }
+
+  $data += array(
+    'width' => NULL,
+    'height' => NULL,
+    'upscale' => FALSE,
+  );
+
+  if ($coords) {
+    // Use our crop function when we have coords.
+    if (!hopcrop_scale($image, $data['width'], $data['height'], $data['upscale'], $coords['nw_x'], $coords['nw_y'], $coords['ze_x'], $coords['ze_y'])) {
+      watchdog(
+        'image',
+        'HopCrop failed using the %toolkit toolkit on %path (%mimetype, %dimensions)',
+        array(
+          '%toolkit' => $image->toolkit,
+          '%path' => $image->source,
+          '%mimetype' => $image->info['mime_type'],
+          '%dimensions' =>
+          $image->info['width'] . 'x' . $image->info['height'],
+        ),
+        WATCHDOG_ERROR
+      );
+      return FALSE;
+    }
+  }
+  else {
+    // Just use the existing scale & crop as a fallback.
+    if (!image_scale($image, $data['width'], $data['height'], $data['upscale'])) {
+      watchdog(
+        'image',
+        'Image scale failed using the %toolkit toolkit on %path (%mimetype, %dimensions)',
+        array(
+          '%toolkit' => $image->toolkit,
+          '%path' => $image->source,
+          '%mimetype' => $image->info['mime_type'],
+          '%dimensions' => $image->info['width'] . 'x' . $image->info['height'],
+        ),
+        WATCHDOG_ERROR
+      );
+      return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+/**
  * Crop an image to given size.
  */
 function hopcrop_crop(stdClass $image, $width, $height, $nw_x, $nw_y, $ze_x, $ze_y) {
@@ -260,6 +360,19 @@ function hopcrop_crop(stdClass $image, $width, $height, $nw_x, $nw_y, $ze_x, $ze
   if (image_crop($image, $nw_x, $nw_y, $ze_x - $nw_x, $ze_y - $nw_y)) {
     // Then, run through scale & crop to ensure the requested dimensions.
     return image_scale_and_crop($image, $width, $height);
+  }
+
+  return FALSE;
+}
+
+/**
+ * Crop and scale an image to given size.
+ */
+function hopcrop_scale(stdClass $image, $width, $upscale, $height, $nw_x, $nw_y, $ze_x, $ze_y) {
+  // First, execute the crop.
+  if (image_crop($image, $nw_x, $nw_y, $ze_x - $nw_x, $ze_y - $nw_y)) {
+    // Then, run through scale & crop to ensure the requested dimensions.
+    return image_scale($image, $width, $height, $upscale);
   }
 
   return FALSE;
@@ -353,28 +466,57 @@ function hopcrop_hopcrop_process($element) {
     }
 
     foreach ($styles[$style_name]['effects'] as $effect) {
-      if ($effect['name'] == 'hopcrop') {
-        $style_info = array(
-          'name' => $style_name,
-          'label' => !empty($styles[$style_name]['label']) ? $styles[$style_name]['label'] : $style_name,
-          'width' => $effect['data']['width'],
-          'height' => $effect['data']['height'],
-        );
-
-        if ($effect['data']['width'] > $info['width'] || $effect['data']['height'] > $info['height']) {
-          $style_info['warning'] = t('The image is too small for this crop.');
-
-          $factor = min(floatval($info['width']) / floatval($effect['data']['width']), floatval($info['height']) / floatval($effect['data']['height']));
-          $style_info['min_width'] = floatval($effect['data']['width']) * $factor;
-          $style_info['min_height'] = floatval($effect['data']['height']) * $factor;
-        }
-        else {
-          $style_info['min_width'] = $effect['data']['width'];
-          $style_info['min_height'] = $effect['data']['height'];
-        }
-
-        $styles_data[$style_name] = $style_info;
+      if ($effect['module'] != 'hopcrop') {
+        continue;
       }
+
+      $style_info = array(
+        'name' => $style_name,
+        'label' => !empty($styles[$style_name]['label']) ? $styles[$style_name]['label'] : $style_name,
+        'protect_aspect_ratio' => FALSE,
+      );
+
+      switch ($effect['name']) {
+        case 'hopcrop':
+          $style_info['width'] = $effect['data']['width'];
+          $style_info['height'] = $effect['data']['height'];
+          $style_info['protect_aspect_ratio'] = TRUE;
+
+          if ($effect['data']['width'] > $info['width'] || $effect['data']['height'] > $info['height']) {
+            $style_info['warning'] = t('The image is too small for this crop.');
+
+            $factor = min(floatval($info['width']) / floatval($effect['data']['width']), floatval($info['height']) / floatval($effect['data']['height']));
+            $style_info['min_width'] = floatval($effect['data']['width']) * $factor;
+            $style_info['min_height'] = floatval($effect['data']['height']) * $factor;
+          }
+          else {
+            $style_info['min_width'] = $effect['data']['width'];
+            $style_info['min_height'] = $effect['data']['height'];
+          }
+          break;
+
+        case 'hopcrop_scale':
+          if (!empty($effect['data']['width'])) {
+            if ($effect['data']['width'] > $info['width']) {
+              $style_info['warning'] = t('The image is too small for this crop.');
+              $style_info['min_width'] = $info['width'];
+            } else {
+              $style_info['min_width'] = $effect['data']['width'];
+            }
+          } 
+
+          if (!empty($effect['data']['height'])) {
+            if ($effect['data']['height'] > $info['height']) {
+              $style_info['warning'] = t('The image is too small for this crop.');
+              $style_info['min_height'] = $info['height'];
+            } else {
+              $style_info['min_height'] = $effect['data']['height'];
+            }
+          }
+          break;
+      }
+
+      $styles_data[$style_name] = $style_info;
     }
   }
 

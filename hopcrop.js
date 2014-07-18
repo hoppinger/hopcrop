@@ -56,23 +56,40 @@ var Style = function(cropper, style_name, style_item, settings) {
         if (!nav_item.hasClass('filled')) { nav_item.addClass('filled'); }
       },
 
+      jCropOptions = function() {
+        var result = {
+          onChange: set,
+          onSelect: set,
+        };
+
+        if (settings.protect_aspect_ratio) {
+          result.aspectRatio = settings.width / settings.height;
+        }
+
+        var min_size = [0, 0];
+        if (settings.min_width !== undefined) {
+          min_size[0] = Math.floor(settings.min_width * settings.display_factor);
+        }
+        if (settings.min_height !== undefined) {
+          min_size[1] = Math.floor(settings.min_height * settings.display_factor);
+        }
+
+        result.minSize = min_size;
+
+        var c = parseCoords(input.val());
+        if (!coordsEmpty(c)) {
+          result.setSelect = flattenCoords(c);
+        };
+
+        return result;
+      },
+
       // Activate the cropper.
       activate = function() {
         if (active) { return; }
 
         // Setup Jcrop.
-        jcrop = $.Jcrop(cropper.image, {
-          onChange: set,
-          onSelect: set,
-          aspectRatio: settings.width / settings.height,
-          minSize: [Math.floor(settings.min_width * settings.display_factor), Math.floor(settings.min_height * settings.display_factor)]
-        });
-
-        var c = parseCoords(input.val());
-
-        if (!coordsEmpty(c)) {
-          jcrop.setSelect(flattenCoords(c));
-        };
+        jcrop = $.Jcrop(cropper.image, jCropOptions());
 
         // Mark as activated.
         nav_item.addClass('active');
