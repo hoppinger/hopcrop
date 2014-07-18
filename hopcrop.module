@@ -915,7 +915,6 @@ function hopcrop_styles() {
  * Fetch the coords for a given style and URI.
  */
 function hopcrop_coords_style_uri($style_name, $uri) {
-  watchdog('image2', $uri, array(), WATCHDOG_ERROR);
   $query = db_select('file_managed', 'f');
   $query->join('hopcrop_coords', 'c', 'c.fid = f.fid AND c.style_name = :style', array(':style' => $style_name));
 
