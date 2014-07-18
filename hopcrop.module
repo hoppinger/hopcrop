@@ -483,7 +483,7 @@ function hopcrop_hopcrop_process($element) {
           $style_info['protect_aspect_ratio'] = TRUE;
 
           if ($effect['data']['width'] > $info['width'] || $effect['data']['height'] > $info['height']) {
-            $style_info['warning'] = t('The image is too small for this crop.');
+            $style_info['warning'] = t('The image is too small for this style.');
 
             $factor = min(floatval($info['width']) / floatval($effect['data']['width']), floatval($info['height']) / floatval($effect['data']['height']));
             $style_info['min_width'] = floatval($effect['data']['width']) * $factor;
@@ -498,7 +498,7 @@ function hopcrop_hopcrop_process($element) {
         case 'hopcrop_scale':
           if (!empty($effect['data']['width'])) {
             if ($effect['data']['width'] > $info['width']) {
-              $style_info['warning'] = t('The image is too small for this crop.');
+              $style_info['warning'] = t('The image is too small for this style.');
               $style_info['min_width'] = $info['width'];
             } else {
               $style_info['min_width'] = $effect['data']['width'];
@@ -507,7 +507,7 @@ function hopcrop_hopcrop_process($element) {
 
           if (!empty($effect['data']['height'])) {
             if ($effect['data']['height'] > $info['height']) {
-              $style_info['warning'] = t('The image is too small for this crop.');
+              $style_info['warning'] = t('The image is too small for this style.');
               $style_info['min_height'] = $info['height'];
             } else {
               $style_info['min_height'] = $effect['data']['height'];
